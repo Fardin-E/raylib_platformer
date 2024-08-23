@@ -6,15 +6,10 @@ const int screenHeight = 800;
 const float jumpVelocity = -15.0f;
 const float G = 0.5f;
 
-struct Platform // Renamed to "Platform" to follow proper naming conventions
-{
-    Rectangle rect;
-    Color color;
-};
 
 struct Environment
 {
-    Platform envObjects[3]; // Stack allocation with a fixed number of platforms
+    Rectangle envObjects[4]; // Stack allocation with a fixed number of platforms
 
     Environment()
     {
@@ -23,17 +18,22 @@ struct Environment
 
     void Init()
     {
-        envObjects[0] = { {100, 100, 400, 20}, DARKBLUE };
-        envObjects[1] = { {500, 240, 600, 20}, GREEN };
-        envObjects[2] = { {300, 400, 700, 20}, GRAY };
+        envObjects[0] = {100, 100, 400, 20};
+        envObjects[1] = {500, 240, 600, 20};
+        envObjects[2] = {300, 400, 700, 20};
+        envObjects[3] = {200, 600, 600, 20};
     }
 
-    void Draw() const
+    void Drawflat() const
     {
-        for (const auto& platform : envObjects)
+        for (int i = 0; i < 3; i++)
         {
-            DrawRectangleRec(platform.rect, platform.color);
+            DrawRectangleRec(envObjects[i], GREEN);
         }
+    }
+    void Drawpro() const
+    {
+        DrawRectanglePro(envObjects[3], Vector2{ 0, 0 }, 30.0f, GRAY);
     }
 };
 
@@ -63,15 +63,15 @@ struct Player
         position.y += speed;
         onGround = false;
 
-        for (const auto& envPlatform : env.envObjects)
+        for (const Rectangle& envPlatform : env.envObjects)
         {
             if (CheckCollisionRecs(
                 { position.x, position.y, width, height },
-                envPlatform.rect))
+                envPlatform))
             {
                 if (speed > 0) // Only stop falling if moving down
                 {
-                    position.y = envPlatform.rect.y - height; // Set player on top of the platform
+                    position.y = envPlatform.y - height; // Set player on top of the platform
                     speed = 0; // Stop downward motion
                     onGround = true; // Player is now on a platform
                     break; // No need to check other platforms
@@ -125,7 +125,8 @@ int main()
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        environmentObjects.Draw();
+        environmentObjects.Drawflat();
+        environmentObjects.Drawpro();
         player.Draw();
 
         EndDrawing();
