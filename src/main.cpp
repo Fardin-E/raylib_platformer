@@ -1,10 +1,10 @@
 #include "header.h"
 
-const int screenWidth = 1200; // Constants do not take more memory than necessary
-const int screenHeight = 800;
+global_variable const int screenWidth = 1200; // Constants do not take more memory than necessary
+global_variable const int screenHeight = 800;
 
-const float jumpVelocity = -15.0f;
-const float G = 0.5f;
+global_variable const float jumpVelocity = -15.0f;
+global_variable const float G = 0.5f;
 
 
 struct Environment
@@ -63,8 +63,10 @@ struct Player
         position.y += speed;
         onGround = false;
 
-        for (const Rectangle& envPlatform : env.envObjects)
+        for (int i = 0; i < 4; i++) // Loop from 0 to 2
         {
+            const Rectangle& envPlatform = env.envObjects[i];
+
             if (CheckCollisionRecs(
                 { position.x, position.y, width, height },
                 envPlatform))
@@ -78,6 +80,8 @@ struct Player
                 }
             }
         }
+        // if (CheckCollisionPointPoly())
+
 
         // Horizontal movement
         if (IsKeyDown(KEY_RIGHT))
