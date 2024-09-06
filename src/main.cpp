@@ -13,6 +13,7 @@ int main() {
     envObstacles[2].Init({ 300, 400, 1200, 30 }, { 0, 0 }, 0.0f, GRAY);
     envObstacles[3].Init({ 200, 600, 600, 30 }, { 0, 0 }, 0.0f, GRAY);
 
+
     // Initialize player
     Player player;
     player.Init({ 400, 300 }, 20.0f, BLUE);
