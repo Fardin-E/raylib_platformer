@@ -27,7 +27,7 @@ struct Player
     bool onGround = false;
     bool jumpRequested = false;
     const float G = 0.5f; // Gravity constant
-    const float jumpVelocity = -10.0f; // Initial velocity for jumping
+    const float jumpVelocity = -15.0f; // Initial velocity for jumping
 
     void Init(Vector2 center, float radius, Color color);
     void Draw();

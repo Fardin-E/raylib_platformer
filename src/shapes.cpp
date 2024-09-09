@@ -43,11 +43,20 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
     for (const auto& obs : obstacles) {
         if (CheckCollisionCircleRec(center, radius, obs.envObjects)) {
             if (speed > 0) { // Only stop falling if moving down
-                center.y = obs.envObjects.y - radius; // Set player on top of the platform
-                speed = 0; // Stop downward motion
-                onGround = true; // Player is now on a platform
-                break; // No need to check other platforms
+
+                if (center.y + radius >= obs.envObjects.y + obs.envObjects.height / 2)
+                {
+                    // speed *= -1;
+                    isFloating = true;
+                    break;
+                }
+                else
+                {
+                    center.y = obs.envObjects.y - radius; // Set player on top of the platform
+                }
             }
+            speed = 0; // Stop downward motion
+            onGround = true; // Player is now on a platform
         }
     }
 

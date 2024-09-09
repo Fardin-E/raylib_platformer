@@ -8,10 +8,11 @@ int main() {
 
     // Initialize obstacles
     std::vector<Obstacle> envObstacles(4);
-    envObstacles[0].Init({ 100, 100, 400, 20 }, { 0, 0 }, 0.0f, GRAY);
-    envObstacles[1].Init({ 500, 240, 600, 20 }, { 0, 0 }, 0.0f, GRAY);
-    envObstacles[2].Init({ 300, 400, 1200, 20 }, { 0, 0 }, 0.0f, GRAY);
-    envObstacles[3].Init({ 200, 600, 600, 20 }, { 0, 0 }, 0.0f, GRAY);
+    envObstacles[0].Init({ 100, 100, 400, 30 }, { 0, 0 }, 0.0f, GRAY);
+    envObstacles[1].Init({ 500, 240, 600, 30 }, { 0, 0 }, 0.0f, GRAY);
+    envObstacles[2].Init({ 300, 400, 1200, 30 }, { 0, 0 }, 0.0f, GRAY);
+    envObstacles[3].Init({ 200, 600, 600, 30 }, { 0, 0 }, 0.0f, GRAY);
+
 
     // Initialize player
     Player player;
