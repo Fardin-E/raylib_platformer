@@ -5,7 +5,6 @@
 #include <vector>
 #include "raylib.h"
 #include "shapes.h"
-#include "Box2d/box2d.h"
 
 #define global_variable static
 
