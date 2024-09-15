@@ -26,6 +26,7 @@ struct Player
     bool isFloating = true;
     bool onGround = false;
     bool jumpRequested = false;
+    bool canJump = true; // Flag to allow jumping
     const float G = 0.5f; // Gravity constant
     const float jumpVelocity = -15.0f; // Initial velocity for jumping
 
