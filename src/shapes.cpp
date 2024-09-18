@@ -33,7 +33,7 @@ void Player::Draw()
 
 void Player::Update(const std::vector<Obstacle>& obstacles) {
     if (isFloating) {
-        speed += G; // Apply gravity
+        //speed += G; // Apply gravity
     }
 
     // Update position
@@ -42,24 +42,39 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
 
     for (const auto& obs : obstacles) {
         if (CheckCollisionCircleRec(center, radius, obs.envObjects)) {
-            if (speed > 0) { // Only stop falling if moving down
+            //if (speed > 0) { // Only stop falling if moving down
+            //
+            //    
+            //    center.y = obs.envObjects.y - radius;
+            //
+            //    if (center.y + radius >= obs.envObjects.y + obs.envObjects.height / 2)
+            //    {
+            //        speed -= 1;
+            //        isFloating = true;
+            //    }
+            //    else
+            //    {
+            //        center.y = obs.envObjects.y - radius; // Set player on top of the platform
+            //    }
+            //}
+            //speed = 0; // Stop downward motion
+            //onGround = true; // Player is now on a platform
 
-                
+            // Vertical collision logic (Y-axis)
+
+            if (center.y + radius >= obs.envObjects.y && center.y <= obs.envObjects.y + obs.envObjects.height / 2)
+            {
                 center.y = obs.envObjects.y - radius;
-
-                //if (center.y + radius >= obs.envObjects.y + obs.envObjects.height / 2)
-                //{
-                //    speed -= 1;
-                //    isFloating = true;
-                //}
-                //else
-                //{
-                //    center.y = obs.envObjects.y - radius; // Set player on top of the platform
-                //}
             }
-            speed = 0; // Stop downward motion
-            onGround = true; // Player is now on a platform
-        }
+            else if (center.y - radius <= obs.envObjects.y + obs.envObjects.height && center.y > obs.envObjects.y + obs.envObjects.height / 2)
+            {
+                center.y = obs.envObjects.y + obs.envObjects.height + radius;
+            }
+
+            // Horizontal collision logic (X-axis)
+            
+        }   
+
     }
 
     // Horizontal movement
@@ -68,6 +83,14 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
     }
     if (IsKeyDown(KEY_LEFT)) {
         center.x -= 5.0f;
+    }
+
+    // testing mode
+    if (IsKeyDown(KEY_DOWN)) {
+        center.y += 5.0f;
+    }
+    if (IsKeyDown(KEY_UP)) {
+        center.y -= 5.0f;
     }
 
     // Jumping
