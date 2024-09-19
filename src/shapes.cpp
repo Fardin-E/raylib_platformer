@@ -33,48 +33,47 @@ void Player::Draw()
 
 void Player::Update(const std::vector<Obstacle>& obstacles) {
     if (isFloating) {
-        //speed += G; // Apply gravity
+        // Apply gravity
+        // speed += G; 
     }
 
-    // Update position
+    // Update vertical position
     center.y += speed;
     onGround = false;
 
     for (const auto& obs : obstacles) {
         if (CheckCollisionCircleRec(center, radius, obs.envObjects)) {
-            //if (speed > 0) { // Only stop falling if moving down
-            //
-            //    
-            //    center.y = obs.envObjects.y - radius;
-            //
-            //    if (center.y + radius >= obs.envObjects.y + obs.envObjects.height / 2)
-            //    {
-            //        speed -= 1;
-            //        isFloating = true;
-            //    }
-            //    else
-            //    {
-            //        center.y = obs.envObjects.y - radius; // Set player on top of the platform
-            //    }
-            //}
-            //speed = 0; // Stop downward motion
-            //onGround = true; // Player is now on a platform
+            // Calculate overlap in X and Y directions
+            float overlapX = std::min(center.x + radius - obs.envObjects.x, obs.envObjects.x + obs.envObjects.width - center.x - radius);
+            float overlapY = std::min(center.y + radius - obs.envObjects.y, obs.envObjects.y + obs.envObjects.height - center.y - radius);
 
-            // Vertical collision logic (Y-axis)
-
-            if (center.y + radius >= obs.envObjects.y && center.y <= obs.envObjects.y + obs.envObjects.height / 2)
-            {
-                center.y = obs.envObjects.y - radius;
+            if (overlapX < overlapY) {
+                // Horizontal collision logic (X-axis)
+                if (center.x + radius >= obs.envObjects.x && center.x <= obs.envObjects.x + obs.envObjects.width / 2) {
+                    // Collide from the left
+                    center.x = obs.envObjects.x - radius;
+                }
+                else if (center.x - radius <= obs.envObjects.x + obs.envObjects.width && center.x >= obs.envObjects.x + obs.envObjects.width / 2) {
+                    // Collide from the right
+                    center.x = obs.envObjects.x + obs.envObjects.width + radius;
+                }
             }
-            else if (center.y - radius <= obs.envObjects.y + obs.envObjects.height && center.y > obs.envObjects.y + obs.envObjects.height / 2)
-            {
-                center.y = obs.envObjects.y + obs.envObjects.height + radius;
+            else {
+                // Vertical collision logic (Y-axis)
+                if (center.y + radius >= obs.envObjects.y && center.y <= obs.envObjects.y + obs.envObjects.height / 2) {
+                    // Landing on top of the obstacle
+                    center.y = obs.envObjects.y - radius;
+                    speed = 0;  // Stop downward motion
+                    onGround = true;
+                    isFloating = false;
+                }
+                else if (center.y - radius <= obs.envObjects.y + obs.envObjects.height && center.y > obs.envObjects.y + obs.envObjects.height / 2) {
+                    // Collide from below
+                    center.y = obs.envObjects.y + obs.envObjects.height + radius;
+                    speed = 0;  // Stop upward motion
+                }
             }
-
-            // Horizontal collision logic (X-axis)
-            
-        }   
-
+        }
     }
 
     // Horizontal movement
@@ -85,7 +84,7 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
         center.x -= 5.0f;
     }
 
-    // testing mode
+    // Debugging mode
     if (IsKeyDown(KEY_DOWN)) {
         center.y += 5.0f;
     }
@@ -93,7 +92,7 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
         center.y -= 5.0f;
     }
 
-    // Jumping
+    // Jumping logic
     if (IsKeyPressed(KEY_SPACE)) {
         jumpRequested = true;
     }
@@ -102,5 +101,5 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
         speed = jumpVelocity;
         isFloating = true;
     }
-    jumpRequested = false; // Clear jump request after jumping
+    jumpRequested = false;  // Clear jump request after jumping
 }
