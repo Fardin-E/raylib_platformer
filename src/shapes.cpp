@@ -79,7 +79,6 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
         }
         else {
             isFloating = true;
-            onGround = false;
         }
     }
 
