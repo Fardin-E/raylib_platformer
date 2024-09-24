@@ -109,3 +109,21 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
     }
     jumpRequested = false;  // Clear jump request after jumping
 }
+
+void PolyObj::Init(Vector2 initCenter, int initSides, float initRadius, float initRotation,
+    Color initColor) {
+
+    center = initCenter;
+    sides = initSides;
+    radius = initRadius;
+    rotation = initRotation;
+    color = initColor;
+}
+
+void PolyObj::Draw() {
+    DrawPoly(center, sides, radius, rotation, color);
+}
+
+void PolyObj::Update() {
+    
+}

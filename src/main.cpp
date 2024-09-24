@@ -22,11 +22,16 @@ int main() {
     Player player;
     player.Init({ 400, 300 }, 20.0f, BLUE);
 
+    // Initalize Camera
     Camera2D camera = { 0 };
     camera.target = player.center;
     camera.offset = { screenWidth / 2.0f, screenHeight / 2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
+
+    // Initialize a polygon
+    PolyObj polyO;
+    polyO.Init({ 500, 500 }, 6, 50.0f, 0.0f, GREEN);
 
     while (!WindowShouldClose()) {
         // Update each obstacle (if needed)
@@ -53,6 +58,7 @@ int main() {
         // Draw player
         player.Draw();
 
+        polyO.Draw();
 
         EndMode2D();
 

@@ -34,3 +34,16 @@ struct Player
     void Draw();
     void Update(const std::vector<Obstacle>& obstacles);
 };
+
+struct PolyObj
+{
+    Vector2 center{};
+    int sides;
+    float radius;
+    float rotation;
+    Color color;
+
+    void Init(Vector2 center, int sides, float radius, float rotation, Color color);
+    void Draw();
+    void Update();
+};
