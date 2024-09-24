@@ -32,14 +32,17 @@ void Player::Draw()
 }
 
 void Player::Update(const std::vector<Obstacle>& obstacles) {
-    if (isFloating) {
+
+    onGround = false;
+
+    if (isFloating && !onGround) {
         // Apply gravity
-        // speed += G; 
+        speed += G; 
     }
 
     // Update vertical position
     center.y += speed;
-    onGround = false;
+    
 
     for (const auto& obs : obstacles) {
         if (CheckCollisionCircleRec(center, radius, obs.envObjects)) {
@@ -74,6 +77,10 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
                 }
             }
         }
+        else {
+            isFloating = true;
+            onGround = false;
+        }
     }
 
     // Horizontal movement
@@ -85,12 +92,12 @@ void Player::Update(const std::vector<Obstacle>& obstacles) {
     }
 
     // Debugging mode
-    if (IsKeyDown(KEY_DOWN)) {
+    /*if (IsKeyDown(KEY_DOWN)) {
         center.y += 5.0f;
     }
     if (IsKeyDown(KEY_UP)) {
         center.y -= 5.0f;
-    }
+    }*/
 
     // Jumping logic
     if (IsKeyPressed(KEY_SPACE)) {
