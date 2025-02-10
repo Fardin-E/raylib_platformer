@@ -4,10 +4,4 @@
 #include <iostream>
 #include <vector>
 #include "raylib.h"
-#include "shapes.h"
 #include "Box2d/box2d.h"
-
-#define global_variable static
-
-global_variable int screenWidth = 1200; // Constants do not take more memory than necessary
-global_variable int screenHeight = 800;
