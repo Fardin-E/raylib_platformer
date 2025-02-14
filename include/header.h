@@ -1,7 +1,6 @@
 #pragma once
 
 //you would add header files in this folder
-#include <iostream>
-#include <vector>
+#include <stdio.h>
+#include <time.h>
 #include "raylib.h"
-#include "Box2d/box2d.h"
