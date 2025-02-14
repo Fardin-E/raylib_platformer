@@ -8,7 +8,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # MSVC specific settings
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    add_compile_options(/arch:AVX2)
 endif()
 
 # Set the project name
