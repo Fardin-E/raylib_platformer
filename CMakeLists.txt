@@ -25,8 +25,6 @@ add_executable(${CMAKE_PROJECT_NAME} ${MY_SOURCES})
 # Link the executable with Raylib
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE raylib)
 
-#Link the box2d library
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE box2d::box2d)
 
 # Include directories
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
