@@ -26,7 +26,7 @@ Environment CreateEnvironment(Rectangle blocks[], int blockNum)
     return environment;
 }
 
-void Init_and_draw_floor(Environment *environment, Rectangle rectangle)
+void Init_and_draw_floor(Environment *environment, Color tint)
 {
       if (environment == NULL || environment->blocks == NULL)
       {
@@ -34,18 +34,36 @@ void Init_and_draw_floor(Environment *environment, Rectangle rectangle)
             return;
       }
 
-      if (environment->blockNum > 0)
+      if (environment->blockNum >= 0)
       {
-            environment->blocks[0] = rectangle;
 
-            DrawRectangleRec(environment->blocks[0], BLACK);
-
-            // Optional: Draw outline to make sure it's visible
-            DrawRectangleLinesEx(environment->blocks[0], 2, RED);
+            DrawRectangleRec(environment->blocks[0], tint);
       }
       else
       {
             TraceLog(LOG_WARNING, "No blocks to draw");
       }
+}
+
+void drawBlock(Environment *environment, Vector2 origin, float rotation, Color tint) 
+{
+    if (environment == NULL || environment->blocks == NULL)
+    {
+        TraceLog(LOG_WARNING, "Environment or blocks array is NULL");
+        return;
+    }
+
+    if (environment->blockNum > 0)
+    {
+        // it is looping from i = 1 because i = 0 is hardcoded to be the floor
+        for (int i = 1; i < environment->blockNum; i++)
+        {
+            DrawRectanglePro(environment->blocks[i], origin, rotation, tint);
+        }
+    }
+    else
+    {
+        TraceLog(LOG_WARNING, "No blocks to draw");
+    }
 }
 
