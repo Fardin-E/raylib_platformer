@@ -28,12 +28,7 @@ CollisionType CheckCollision(Player *player, Environment *environment)
 
 void UpdatePlayer(Player *player, Environment *environment, float dt)
 {
-    // Use predicted position for x and y axis to implement both horizontal and vertical collision
-    Rectangle predictedPos = {  player->shape.x + player->velocity.x * dt,
-                                player->shape.y + player->velocity.y * dt,
-                                player->shape.width, player->shape.height };
-
-    // Apply gravity to velocity if enabled
+    // Apply gravity to vertical velocity if enabled
     if (player->useGravity)
     {
         player->velocity.y += GRAVITY * dt;
@@ -45,31 +40,44 @@ void UpdatePlayer(Player *player, Environment *environment, float dt)
         player->velocity.x = 0.0f;
     }
 
-    // Horizontal movement
+    // Horizontal movement input
     if (IsKeyDown(KEY_RIGHT) && player->velocity.x < MAX_SPEED)
     {
-        player->velocity.x -= SPEED;
+        // Increase velocity to the right
+        player->velocity.x += SPEED;
     }
     if (IsKeyDown(KEY_LEFT) && player->velocity.x > -MAX_SPEED)
     {
-        player->velocity.x += SPEED;
+        // Increase velocity to the left (more negative)
+        player->velocity.x -= SPEED;
     }
 
-    // Update the player's position based on velocity
-    player->shape.x += player->velocity.x * dt;
-    player->shape.y += player->velocity.y * dt;
+    // Calculate new predicted positions based on velocity
+    float newX = player->shape.x + player->velocity.x * dt;
+    float newY = player->shape.y + player->velocity.y * dt;
 
+    // Predictive collision rectangle
+    Rectangle predictedPos = { newX, newY, player->shape.width, player->shape.height };
+
+    // Check collision against each environment block
     for (int i = 0; i < environment->blockNum; i++)
     {
         if (CheckCollisionRecs(predictedPos, environment->blocks[i]))
         {
-            TraceLog(LOG_WARNING, "Collided");
+            TraceLog(LOG_WARNING, "Collided with block %d", i);
+            newY = player->shape.y;
+            player->velocity.y = 0;
+            break;
         }
     }
 
-    // Jumping (when touching ground)
-    if (IsKeyPressed(KEY_SPACE) && !player->useGravity)
-    {
+    // Update the player's position with the new values
+    player->shape.x = newX;
+    player->shape.y = newY;
 
+    // Jumping (example: if space is pressed and the player is on the ground)
+    if (IsKeyPressed(KEY_SPACE) && player->velocity.y == 0)
+    {
+        player->velocity.y = -JUMP_SPEED;  // Ensure JUMP_SPEED is defined appropriately
     }
 }
