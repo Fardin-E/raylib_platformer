@@ -24,7 +24,7 @@ int main(void)
 	camera.zoom = 1.0f;
 
 	Rectangle playerShape = { 200.0f, 200.0f, 40.0f, 40.0f };
-	Vector2 velocity = { 5.0f, 5.0f };
+	Vector2 velocity = { 0.0f, 0.0f };
 
 
 	Rectangle floor = { 0.0f, 500.0f, 800.0f, 100.0f };
