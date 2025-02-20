@@ -7,31 +7,33 @@
 
 #define MAX_SPEED 500.0f
 #define SPEED 100.0f
-#define GRAVITY 75.0f
+#define GRAVITY 100.0f
 #define JUMP_SPEED 200.0f
+
+typedef enum
+{
+	DEFAULT_COLLISION = 0,
+	VERTICAL_COLLISION,
+	HORIZONTAL_COLLISION,
+	FREE_FALLING,
+	GROUNDED,
+} PlayerState;
 
 typedef struct Player
 {
 	Rectangle shape;
 	Vector2 velocity;
 	Camera2D camera;
-	int collision;
+	PlayerState state;
 	bool useGravity;
 } Player;
 
-typedef enum CollisionType
-{
-	NO_COLLISION,
-	VERTICAL_COLLISION,
-	HORIZONTAL_COLLISION
-} CollisionType;
 
-Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera);
+
+Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerState state);
 
 void DrawPlayer(Player player, float rotation, Color tint);
 
-CollisionType CheckCollision(Player *player, Environment *environment);
-
-Vector2 GetCollisionPoint(Rectangle r1, Rectangle r2);
+PlayerState state(Player *player, Environment *environment);
 
 void UpdatePlayer(Player *player, Environment *environment, float dt);

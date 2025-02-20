@@ -1,13 +1,13 @@
 #include "player.h"
 
-Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera)
+Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerState state)
 {
 	Player player = 
 	{
 		.shape = shape,
 		.velocity = velocity,
 		.camera = camera,
-        .collision = NO_COLLISION,
+        .state = state,
 		.useGravity = true,
 	};
 
@@ -21,7 +21,7 @@ void DrawPlayer(Player player, float rotation, Color tint)
         rotation, tint);
 }
 
-CollisionType CheckCollision(Player *player, Environment *environment)
+PlayerState state(Player *player, Environment *environment)
 {
 
 }
