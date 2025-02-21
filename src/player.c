@@ -8,7 +8,6 @@ Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerSt
 		.velocity = velocity,
 		.camera = camera,
         .state = state,
-		.useGravity = true,
 	};
 
 	return player;
@@ -21,22 +20,17 @@ void DrawPlayer(Player player, float rotation, Color tint)
         rotation, tint);
 }
 
-PlayerState state(Player *player, Environment *environment)
-{
-
-}
-
 
 void UpdatePlayer(Player *player, Environment *environment, float dt)
 {
     // Horizontal movement input
     if (IsKeyDown(KEY_RIGHT))
     {
-        player->velocity.x = fmin(player->velocity.x + SPEED * dt, MAX_SPEED);
+        player->velocity.x = fminf(player->velocity.x + SPEED * dt, MAX_SPEED);
     }
     else if (IsKeyDown(KEY_LEFT))
     {
-        player->velocity.x = fmax(player->velocity.x - SPEED * dt, -MAX_SPEED);
+        player->velocity.x = fmaxf(player->velocity.x - SPEED * dt, -MAX_SPEED);
     }
     else
     {
@@ -44,7 +38,7 @@ void UpdatePlayer(Player *player, Environment *environment, float dt)
     }
 
     // Vertical movement (gravity)
-    if (player->useGravity)
+    if (player->state == FREE_FALLING)
     {
         player->velocity.y += GRAVITY * dt;
     }
@@ -78,14 +72,14 @@ void UpdatePlayer(Player *player, Environment *environment, float dt)
             else if (player->velocity.x < 0) {
                 newX = environment->blocks[i].x + environment->blocks[i].width;
             }
+            // the player state is horizontal collision regardless of where it collides in the x-axis
+            player->state = HORIZONTAL_COLLISION;
             player->velocity.x = 0;
             break;
         }
     }
 
     player->shape.x = newX;
-
-    bool onGround = false;
 
     // Vertical collision
     float newY = player->shape.y + player->velocity.y * dt;
@@ -101,26 +95,27 @@ void UpdatePlayer(Player *player, Environment *environment, float dt)
             // falling
             if (player->velocity.y > 0) {
                 newY = environment->blocks[i].y - player->shape.height;
-                onGround = true;
+                player->state = GROUNDED;
             }
             else if (player->velocity.y < 0) // Jumping
             {
                 newY = environment->blocks[i].y + environment->blocks[i].height;
+                player->state = VERTICAL_COLLISION;
             }
             player->velocity.y = 0;
             break;
         }
-        player->useGravity = true;
+        player->state = FREE_FALLING;
     }
 
     // Update the player's position with the new values
     player->shape.y = newY;
 
-    player->useGravity = !onGround;
 
     // Jumping (example: if space is pressed and the player is on the ground)
-    if (IsKeyDown(KEY_SPACE) && onGround)
+    if (IsKeyDown(KEY_SPACE) && player->state == GROUNDED)
     {
         player->velocity.y = -JUMP_SPEED;  // Ensure JUMP_SPEED is defined appropriately
+        player->state = JUMPING;
     }
 }

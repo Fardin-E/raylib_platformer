@@ -36,7 +36,7 @@ int main(void)
 		block1,
 	};
 
-	_player = CreatePlayer(playerShape, velocity, camera, DEFAULT_COLLISION);
+	_player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING);
 	_environment = CreateEnvironment(buildings, MAX_BUILDINGS);
 
 	SetTargetFPS(60);

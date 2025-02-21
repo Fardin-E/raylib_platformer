@@ -15,6 +15,7 @@ typedef enum
 	DEFAULT_COLLISION = 0,
 	VERTICAL_COLLISION,
 	HORIZONTAL_COLLISION,
+	JUMPING,
 	FREE_FALLING,
 	GROUNDED,
 } PlayerState;
@@ -25,15 +26,11 @@ typedef struct Player
 	Vector2 velocity;
 	Camera2D camera;
 	PlayerState state;
-	bool useGravity;
 } Player;
-
 
 
 Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerState state);
 
 void DrawPlayer(Player player, float rotation, Color tint);
-
-PlayerState state(Player *player, Environment *environment);
 
 void UpdatePlayer(Player *player, Environment *environment, float dt);
