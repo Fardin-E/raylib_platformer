@@ -29,12 +29,6 @@ typedef struct Player
 	PlayerState state;
 } Player;
 
-float newX;
-float newY;
-
-Rectangle predictedPosX;
-Rectangle predictedPosY;
-
 
 Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerState state);
 
