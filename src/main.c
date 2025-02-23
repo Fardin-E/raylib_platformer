@@ -46,7 +46,7 @@ int main(void)
 		// Update
 		float dt = GetFrameTime();
 
-		UpdatePlayer(&_player, &_environment, dt);
+		UpdatePlayerCollisionAndState(&_player, &_environment, dt);
 
 		// Draw
 		BeginDrawing();

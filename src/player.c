@@ -21,101 +21,112 @@ void DrawPlayer(Player player, float rotation, Color tint)
 }
 
 
-void UpdatePlayer(Player *player, Environment *environment, float dt)
+void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt)
 {
-    // Horizontal movement input
+    // Movement
     if (IsKeyDown(KEY_RIGHT))
     {
-        player->velocity.x = fminf(player->velocity.x + SPEED * dt, MAX_SPEED);
+        player->velocity.x = fminf(player->velocity.x + SPEED, MAX_SPEED);
     }
     else if (IsKeyDown(KEY_LEFT))
     {
-        player->velocity.x = fmaxf(player->velocity.x - SPEED * dt, -MAX_SPEED);
+        player->velocity.x = fmaxf(player->velocity.x - SPEED, -MAX_SPEED);
     }
     else
     {
         player->velocity.x = 0.0f;
     }
+    // Calculate predicted positions
+    float newX = player->shape.x + player->velocity.x * dt;
+    float newY = player->shape.y + player->velocity.y * dt;
+    bool collisionFound = false;
 
-    // Vertical movement (gravity)
-    if (player->state == FREE_FALLING)
-    {
+    // Apply gravity consistently in non-grounded states
+    if (player->state != GROUNDED) {
         player->velocity.y += GRAVITY * dt;
     }
 
-
-    // Horizontal movement input
-    if (IsKeyDown(KEY_RIGHT) && player->velocity.x < MAX_SPEED)
-    {
-        // Increase velocity to the right
-        player->velocity.x += SPEED;
-    }
-    if (IsKeyDown(KEY_LEFT) && player->velocity.x > -MAX_SPEED)
-    {
-        // Increase velocity to the left (more negative)
-        player->velocity.x -= SPEED;
-    }
-
-    // horizontal collision
-    float newX = player->shape.x + player->velocity.x * dt;
-
-    Rectangle predictedPosX = { newX, player->shape.y, player->shape.width, player->shape.height };
-
     // Check collision against each environment block
     for (int i = 0; i < environment->blockNum; i++)
     {
-        if (CheckCollisionRecs(predictedPosX, environment->blocks[i]))
+        Rectangle block = environment->blocks[i];
+        Rectangle predictedPosX = { newX, player->shape.y, player->shape.width, player->shape.height };
+        Rectangle predictedPosY = { player->shape.x, newY, player->shape.width, player->shape.height };
+
+        // Check horizontal collision
+        if (CheckCollisionRecs(predictedPosX, block))
         {
             if (player->velocity.x > 0) {
-                newX = environment->blocks[i].x - player->shape.width;
+                newX = block.x - player->shape.width;
             }
             else if (player->velocity.x < 0) {
-                newX = environment->blocks[i].x + environment->blocks[i].width;
+                newX = block.x + block.width;
             }
-            // the player state is horizontal collision regardless of where it collides in the x-axis
-            player->state = HORIZONTAL_COLLISION;
             player->velocity.x = 0;
-            break;
+            player->state = HORIZONTAL_COLLISION;
+            collisionFound = true;
         }
-    }
 
-    player->shape.x = newX;
-
-    // Vertical collision
-    float newY = player->shape.y + player->velocity.y * dt;
-
-    // Predictive collision rectangle
-    Rectangle predictedPosY = { player->shape.x, newY, player->shape.width, player->shape.height };
-
-    // Check collision against each environment block
-    for (int i = 0; i < environment->blockNum; i++)
-    {
-        if (CheckCollisionRecs(predictedPosY, environment->blocks[i]))
+        // Check vertical collision
+        if (CheckCollisionRecs(predictedPosY, block))
         {
-            // falling
             if (player->velocity.y > 0) {
-                newY = environment->blocks[i].y - player->shape.height;
+                newY = block.y - player->shape.height;
                 player->state = GROUNDED;
             }
-            else if (player->velocity.y < 0) // Jumping
-            {
-                newY = environment->blocks[i].y + environment->blocks[i].height;
+            else if (player->velocity.y < 0) {
+                newY = block.y + block.height;
                 player->state = VERTICAL_COLLISION;
             }
             player->velocity.y = 0;
+            collisionFound = true;
             break;
         }
-        player->state = FREE_FALLING;
     }
 
-    // Update the player's position with the new values
+    // Handle state transitions
+    if (!collisionFound) {
+        if (player->state == GROUNDED) {
+            player->state = FREE_FALLING;
+        }
+    }
+
+    // Update positions
+    player->shape.x = newX;
     player->shape.y = newY;
 
-
-    // Jumping (example: if space is pressed and the player is on the ground)
-    if (IsKeyDown(KEY_SPACE) && player->state == GROUNDED)
+    // State-specific updates
+    switch (player->state)
     {
-        player->velocity.y = -JUMP_SPEED;  // Ensure JUMP_SPEED is defined appropriately
-        player->state = JUMPING;
+        case GROUNDED:
+            if (IsKeyDown(KEY_SPACE)) {
+                player->velocity.y = -JUMP_SPEED;
+                player->state = JUMPING;
+            }
+            break;
+
+        case JUMPING:
+            // Apply air resistance to x velocity
+            player->velocity.x *= AIR_DRAG;
+
+            if (fabsf(player->velocity.x) < 0.1f) {
+                player->velocity.x = 0;
+            }
+
+            // Transition to falling at peak of jump
+            if (player->velocity.y > 0) {
+                player->state = FREE_FALLING;
+            }
+            break;
+
+        case FREE_FALLING:
+            // Also apply air resistance while falling
+            player->velocity.x *= AIR_DRAG;
+            break;
+
+        case HORIZONTAL_COLLISION:
+        case VERTICAL_COLLISION:
+            // These states are handled during collision detection
+            break;
     }
 }
