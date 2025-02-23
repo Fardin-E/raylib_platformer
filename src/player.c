@@ -1,6 +1,7 @@
 #include "player.h"
 
-Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerState state)
+Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, 
+    PlayerState state, SpriteAnimation animation)
 {
 	Player player = 
 	{
@@ -8,16 +9,57 @@ Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerSt
 		.velocity = velocity,
 		.camera = camera,
         .state = state,
+        .animation = animation,
 	};
 
 	return player;
 }
 
 
-void DrawPlayer(Player player, float rotation, Color tint)
+void DrawPlayer(Player player, SpriteAnimation animation, float rotation, float dt, 
+    Vector2 origin, Color tint)
 {
-    DrawRectanglePro(player.shape, (Vector2) { 0, 0 },
-        rotation, tint);
+    int index = (int)((GetTime() - animation.timeStarted) * animation.framesPerSecond) % animation.rectanglesLength;
+
+    Rectangle source = animation.rectangles[index];
+
+    DrawTexturePro(animation.atlas, source, player.shape, origin, rotation, tint);
+
+}
+
+SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, 
+    Rectangle rectangles[], int length)
+{
+    SpriteAnimation spriteAnimation = 
+    {
+        .atlas = atlas,
+        .framesPerSecond = framesPerSecond,
+        .timeStarted = GetTime(),
+        .rectangles = NULL,
+        .rectanglesLength = length,
+    };
+
+    Rectangle *mem = malloc(sizeof(Rectangle) * length);
+    if (mem == NULL)
+    {
+        TraceLog(LOG_WARNING, "No memory for CreateSpriteAnimation");
+        spriteAnimation.rectanglesLength = 0;
+        return spriteAnimation;
+    }
+
+    spriteAnimation.rectangles = mem;
+
+    for (int i = 0; i < length; i++)
+    {
+        spriteAnimation.rectangles[i] = rectangles[i];
+    }
+
+    return spriteAnimation;
+}
+
+void DisposeSpriteAnimation(SpriteAnimation animation)
+{
+    free(animation.rectangles);
 }
 
 
@@ -26,11 +68,11 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     // Movement
     if (IsKeyDown(KEY_RIGHT))
     {
-        player->velocity.x = fminf(player->velocity.x + SPEED, MAX_SPEED);
+        player->velocity.x = fminf(player->velocity.x * dt + SPEED, MAX_SPEED);
     }
     else if (IsKeyDown(KEY_LEFT))
     {
-        player->velocity.x = fmaxf(player->velocity.x - SPEED, -MAX_SPEED);
+        player->velocity.x = fmaxf(player->velocity.x * dt - SPEED, -MAX_SPEED);
     }
     else
     {

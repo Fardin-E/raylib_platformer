@@ -3,6 +3,8 @@
 
 #define MAX_BUILDINGS 2
 
+Texture2D _texture;
+SpriteAnimation _animation;
 Player _player;
 Environment _environment;
 
@@ -25,6 +27,7 @@ int main(void)
 
 	Rectangle playerShape = { 200.0f, 200.0f, 40.0f, 40.0f };
 	Vector2 velocity = { 0.0f, 0.0f };
+	Vector2 origin = { 0 };
 
 
 	Rectangle floor = { 0.0f, 500.0f, 800.0f, 100.0f };
@@ -36,7 +39,12 @@ int main(void)
 		block1,
 	};
 
-	_player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING);
+	_texture = LoadTexture("assets/mario_spritesheet.png");
+	_animation = CreateSpriteAnimation(_texture, 1, (Rectangle[]) {
+		(Rectangle){ 36, 1, 34, 26 },
+	}, 1);
+
+	_player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, _animation);
 	_environment = CreateEnvironment(buildings, MAX_BUILDINGS);
 
 	SetTargetFPS(60);
@@ -55,7 +63,7 @@ int main(void)
 
 			BeginMode2D(camera);
 
-			DrawPlayer(_player, 0.0f, RED);
+			DrawPlayer(_player, _animation, 0.0f, dt, origin, RED);
 
 			Init_and_draw_floor(&_environment, BLACK);
 
@@ -68,6 +76,7 @@ int main(void)
 
 	}
 
+	DisposeSpriteAnimation(_animation);
 	CloseWindow();
 
 	return 0;
