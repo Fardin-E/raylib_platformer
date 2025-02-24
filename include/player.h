@@ -37,15 +37,18 @@ typedef struct Player
     Vector2 velocity;
     Camera2D camera;
     PlayerState state;
-    SpriteAnimation animation;
+    SpriteAnimation *animation_array;
+    int array_length;
 } Player;
 
 
 // Function declarations
 SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, Rectangle rectangles[], int length);
-void DisposeSpriteAnimation(SpriteAnimation animation);
+void DisposeSpriteAnimation(SpriteAnimation *animation);
 
 
-Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerState state, SpriteAnimation animation);
+Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
+    PlayerState state, SpriteAnimation animation_array[], int array_length);
+void DisposePlayer(Player *player);
 void DrawPlayer(Player player, float rotation, float dt, Vector2 origin, Color tint);
 void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt);

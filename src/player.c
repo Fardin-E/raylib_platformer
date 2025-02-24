@@ -1,28 +1,72 @@
 #include "player.h"
 
-Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera, 
-    PlayerState state, SpriteAnimation animation)
+Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
+    PlayerState state, SpriteAnimation animation_array[], int array_length)
 {
-	Player player = 
-	{
-		.shape = shape,
-		.velocity = velocity,
-		.camera = camera,
-        .state = state,
-        .animation = animation,
-	};
+    Player *player = malloc(sizeof(Player));
+    if (!player)
+    {
+        TraceLog(LOG_WARNING, "Failed to allocate memory for Player");
+        return NULL;
+    }
 
-	return player;
+    *player = (Player){
+        .shape = shape,
+        .velocity = velocity,
+        .camera = camera,
+        .state = state,
+        .animation_array = NULL,
+        .array_length = array_length,
+    };
+
+    player->animation_array = malloc(sizeof(SpriteAnimation) * array_length);
+    if (!player->animation_array)
+    {
+        TraceLog(LOG_WARNING, "Failed to allocate memory for animation array");
+        free(player);  // Free the player struct before returning
+        return NULL;
+    }
+
+    for (int i = 0; i < array_length; i++)
+    {
+        player->animation_array[i] = animation_array[i]; // Deep copy animations
+    }
+
+    return player;
 }
+
+void DisposePlayer(Player *player)
+{
+    if (player == NULL) return;
+
+    // Dispose of each SpriteAnimation inside the player's animation array.
+    for (int i = 0; i < player->array_length; i++)
+    {
+        // DisposeSpriteAnimation should free the memory allocated for rectangles.
+        DisposeSpriteAnimation(&player->animation_array[i]);
+    }
+
+    // Free the animation array.
+    free(player->animation_array);
+
+    // Free the player struct itself.
+    free(player);
+}
+
 
 
 void DrawPlayer(Player player, float rotation, float dt, Vector2 origin, Color tint)
 {
-    int index = (int)((GetTime() - player.animation.timeStarted) * player.animation.framesPerSecond) % player.animation.rectanglesLength;
+    for (int i = 0; i < player.array_length; i++)
+    {
+        int index = (int)((GetTime() - player.animation_array[i].timeStarted) * 
+            player.animation_array[i].framesPerSecond) % player.animation_array[i].rectanglesLength;
 
-    Rectangle source = player.animation.rectangles[index];
+        Rectangle source = player.animation_array[i].rectangles[index];
 
-    DrawTexturePro(player.animation.atlas, source, player.shape, origin, rotation, tint);
+        DrawTexturePro(player.animation_array[i].atlas, source, player.shape, origin, rotation, tint);
+
+    }
 
 }
 
@@ -56,10 +100,17 @@ SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond,
     return spriteAnimation;
 }
 
-void DisposeSpriteAnimation(SpriteAnimation animation)
+void DisposeSpriteAnimation(SpriteAnimation *animation)
 {
-    free(animation.rectangles);
+    if (animation == NULL) return;
+
+    if (animation->rectangles)
+    {
+        free(animation->rectangles);
+        animation->rectangles = NULL;
+    }
 }
+
 
 
 void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt)

@@ -1,83 +1,88 @@
 #include "header.h"
 
-
 #define MAX_BUILDINGS 2
 
 Texture2D _texture;
 SpriteAnimation _animation;
-Player _player;
+Player *_player;       // Now a pointer to a dynamically allocated Player
 Environment _environment;
-
 
 int main(void)
 {
+    const int screenWidth = 800;
+    const int screenHeight = 800;
 
-	const int screenWidth = 800;
-	const int screenHeight = 800;
+    InitWindow(screenWidth, screenHeight, "Game");
 
-	InitWindow(screenWidth, screenHeight, "Game");
+    SetTraceLogLevel(LOG_WARNING);
 
-	SetTraceLogLevel(LOG_WARNING);
+    // Setup Camera
+    Camera2D camera = { 0 };
+    camera.target = (Vector2){ screenWidth / 2.0f, screenHeight / 2.0f };
+    camera.offset = (Vector2){ screenWidth / 2.0f, screenHeight / 2.0f };
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
 
-	Camera2D camera = { 0 };
-	camera.target = (Vector2){ screenWidth / 2.0f, screenHeight / 2.0f };
-	camera.offset = (Vector2){ screenWidth / 2.0f, screenHeight / 2.0f };
-	camera.rotation = 0.0f;
-	camera.zoom = 1.0f;
+    // Player properties
+    Rectangle playerShape = { 200.0f, 200.0f, 40.0f, 40.0f };
+    Vector2 velocity = { 0.0f, 0.0f };
+    Vector2 origin = { 0.0f, 0.0f };
 
-	Rectangle playerShape = { 200.0f, 200.0f, 40.0f, 40.0f };
-	Vector2 velocity = { 0.0f, 0.0f };
-	Vector2 origin = { 0 };
+    // Environment blocks
+    Rectangle floor = { 0.0f, 500.0f, 800.0f, 100.0f };
+    Rectangle block1 = { 100.0f, 350.0f, 200.0f, 70.0f };
 
+    Rectangle buildings[MAX_BUILDINGS] = { floor, block1 };
 
-	Rectangle floor = { 0.0f, 500.0f, 800.0f, 100.0f };
+    // Load texture and create sprite animation
+    _texture = LoadTexture("assets/mario_spritesheet.png");
+    _animation = CreateSpriteAnimation(_texture, 1, (Rectangle[]) {
+        (Rectangle) {
+        36, 1, 34, 26
+    },
+    }, 1);
 
-	Rectangle block1 = { 100.0f, 350.0f, 200.0f, 70.0f };
+    // Build the animation array for the player (even if just one element)
+    SpriteAnimation playerAnimations[1] = { _animation };
 
-	Rectangle buildings[MAX_BUILDINGS] = {
-		floor,
-		block1,
-	};
+    // Create the player dynamically
+    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, playerAnimations, 1);
+    if (_player == NULL)
+    {
+        TraceLog(LOG_ERROR, "Failed to create player!");
+        CloseWindow();
+        return 1;
+    }
 
-	_texture = LoadTexture("assets/mario_spritesheet.png");
-	_animation = CreateSpriteAnimation(_texture, 1, (Rectangle[]) {
-		(Rectangle){ 36, 1, 34, 26 },
-	}, 1);
+    // Create environment (assuming CreateEnvironment returns Environment)
+    _environment = CreateEnvironment(buildings, MAX_BUILDINGS);
 
-	_player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, _animation);
-	_environment = CreateEnvironment(buildings, MAX_BUILDINGS);
+    SetTargetFPS(60);
 
-	SetTargetFPS(60);
+    while (!WindowShouldClose())
+    {
+        // Update game logic
+        float dt = GetFrameTime();
+        UpdatePlayerCollisionAndState(_player, &_environment, dt);
 
-	while (!WindowShouldClose())
-	{
-		// Update
-		float dt = GetFrameTime();
+        // Begin drawing
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
 
-		UpdatePlayerCollisionAndState(&_player, &_environment, dt);
+        BeginMode2D(camera);
+        // Dereference _player since DrawPlayer takes a Player by value
+        DrawPlayer(*_player, 0.0f, dt, origin, WHITE);
 
-		// Draw
-		BeginDrawing();
+        Init_and_draw_floor(&_environment, BLACK);
+        drawBlock(&_environment, (Vector2) { 0.0f, 0.0f }, 0.0f, GREEN);
+        EndMode2D();
 
-			ClearBackground(RAYWHITE);
+        EndDrawing();
+    }
 
-			BeginMode2D(camera);
+    // Free allocated memory
+    DisposePlayer(_player);
 
-			DrawPlayer(_player, 0.0f, dt, origin, RED);
-
-			Init_and_draw_floor(&_environment, BLACK);
-
-			drawBlock(&_environment, (Vector2){ 0.0f, 0.0f }, 0.0f, GREEN);
-
-
-			EndMode2D();
-
-		EndDrawing();
-
-	}
-
-	DisposeSpriteAnimation(_animation);
-	CloseWindow();
-
-	return 0;
+    CloseWindow();
+    return 0;
 }
