@@ -16,14 +16,13 @@ Player CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
 }
 
 
-void DrawPlayer(Player player, SpriteAnimation animation, float rotation, float dt, 
-    Vector2 origin, Color tint)
+void DrawPlayer(Player player, float rotation, float dt, Vector2 origin, Color tint)
 {
-    int index = (int)((GetTime() - animation.timeStarted) * animation.framesPerSecond) % animation.rectanglesLength;
+    int index = (int)((GetTime() - player.animation.timeStarted) * player.animation.framesPerSecond) % player.animation.rectanglesLength;
 
-    Rectangle source = animation.rectangles[index];
+    Rectangle source = player.animation.rectangles[index];
 
-    DrawTexturePro(animation.atlas, source, player.shape, origin, rotation, tint);
+    DrawTexturePro(player.animation.atlas, source, player.shape, origin, rotation, tint);
 
 }
 

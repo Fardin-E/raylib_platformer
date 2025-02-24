@@ -63,7 +63,7 @@ int main(void)
 
 			BeginMode2D(camera);
 
-			DrawPlayer(_player, _animation, 0.0f, dt, origin, RED);
+			DrawPlayer(_player, 0.0f, dt, origin, RED);
 
 			Init_and_draw_floor(&_environment, BLACK);
 
