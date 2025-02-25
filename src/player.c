@@ -55,20 +55,26 @@ void DisposePlayer(Player *player)
 
 
 
-void DrawPlayer(Player player, float rotation, float dt, Vector2 origin, Color tint)
+void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint)
 {
-    for (int i = 0; i < player.array_length; i++)
+    if (player == NULL || player->animation_array == NULL)
+        return;
+
+    for (int i = 0; i < player->array_length; i++)
     {
-        int index = (int)((GetTime() - player.animation_array[i].timeStarted) * 
-            player.animation_array[i].framesPerSecond) % player.animation_array[i].rectanglesLength;
+        const SpriteAnimation *anim = &player->animation_array[i];
 
-        Rectangle source = player.animation_array[i].rectangles[index];
+        // Safety checks
+        if (anim->rectangles == NULL || anim->rectanglesLength == 0)
+            continue;
 
-        DrawTexturePro(player.animation_array[i].atlas, source, player.shape, origin, rotation, tint);
+        int index = (int)((GetTime() - anim->timeStarted) * anim->framesPerSecond) % anim->rectanglesLength;
+        Rectangle source = anim->rectangles[index];
 
+        DrawTexturePro(anim->atlas, source, player->shape, origin, rotation, tint);
     }
-
 }
+
 
 SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, 
     Rectangle rectangles[], int length)

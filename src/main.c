@@ -37,9 +37,7 @@ int main(void)
     // Load texture and create sprite animation
     _texture = LoadTexture("assets/mario_spritesheet.png");
     _animation = CreateSpriteAnimation(_texture, 1, (Rectangle[]) {
-        (Rectangle) {
-        36, 1, 34, 26
-    },
+        (Rectangle) { 36, 1, 34, 26 },
     }, 1);
 
     // Build the animation array for the player (even if just one element)
@@ -71,7 +69,7 @@ int main(void)
 
         BeginMode2D(camera);
         // Dereference _player since DrawPlayer takes a Player by value
-        DrawPlayer(*_player, 0.0f, dt, origin, WHITE);
+        DrawPlayer(_player, 0.0f, dt, origin, WHITE);
 
         Init_and_draw_floor(&_environment, BLACK);
         drawBlock(&_environment, (Vector2) { 0.0f, 0.0f }, 0.0f, GREEN);

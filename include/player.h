@@ -50,5 +50,5 @@ void DisposeSpriteAnimation(SpriteAnimation *animation);
 Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
     PlayerState state, SpriteAnimation animation_array[], int array_length);
 void DisposePlayer(Player *player);
-void DrawPlayer(Player player, float rotation, float dt, Vector2 origin, Color tint);
+void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint);
 void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt);
