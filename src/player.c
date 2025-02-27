@@ -53,29 +53,6 @@ void DisposePlayer(Player *player)
     free(player);
 }
 
-
-
-void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint)
-{
-    if (player == NULL || player->animation_array == NULL)
-        return;
-
-    for (int i = 0; i < player->array_length; i++)
-    {
-        const SpriteAnimation *anim = &player->animation_array[i];
-
-        // Safety checks
-        if (anim->rectangles == NULL || anim->rectanglesLength == 0)
-            continue;
-
-        int index = (int)((GetTime() - anim->timeStarted) * anim->framesPerSecond) % anim->rectanglesLength;
-        Rectangle source = anim->rectangles[index];
-
-        DrawTexturePro(anim->atlas, source, player->shape, origin, rotation, tint);
-    }
-}
-
-
 SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, 
     Rectangle rectangles[], int length)
 {
@@ -117,32 +94,75 @@ void DisposeSpriteAnimation(SpriteAnimation *animation)
     }
 }
 
+void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint)
+{
+    if (player == NULL || player->animation_array == NULL)
+        return;
+
+    for (int i = 0; i < player->array_length; i++)
+    {
+        const SpriteAnimation *anime = &player->animation_array[i];
+
+        // Safety checks
+        if (anime->rectangles == NULL || anime->rectanglesLength == 0)
+            continue;
+
+        int index = (int)((GetTime() - anime->timeStarted) * anime->framesPerSecond) % anime->rectanglesLength;
+        Rectangle source = anime->rectangles[index];
+
+        DrawTexturePro(anime->atlas, source, player->shape, origin, rotation, tint);
+    }
+}
+
+void PlayerMovement(Player *player, float dt, float acceleration, float max_speed)
+{
+    // Calculate whether we're using ground or air movement
+    bool isInAir = (player->state == JUMPING || player->state == FREE_FALLING);
+    float frictionValue = isInAir ? AIR_DRAG : GROUND_FRICTION;
+
+    if (IsKeyDown(KEY_RIGHT))
+    {
+        // Apply acceleration with higher values for responsiveness
+        player->velocity.x += acceleration * dt;
+        if (player->velocity.x > max_speed) player->velocity.x = max_speed;
+    }
+    else if (IsKeyDown(KEY_LEFT))
+    {
+        // Apply acceleration with higher values for responsiveness
+        player->velocity.x -= acceleration * dt;
+        if (player->velocity.x < -max_speed) player->velocity.x = -max_speed;
+    }
+    else
+    {
+        // Apply appropriate friction based on whether in air or on ground
+        player->velocity.x *= frictionValue;
+
+        // Stop completely if movement is very small
+        if (fabsf(player->velocity.x) < 5.0f) { // Higher threshold for stopping
+            player->velocity.x = 0.0f;
+        }
+    }
+}
 
 
 void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt)
 {
-    // Movement
-    if (IsKeyDown(KEY_RIGHT))
-    {
-        player->velocity.x = fminf(player->velocity.x * dt + SPEED, MAX_SPEED);
+    // Store previous state for animation transitions
+    PlayerState previousState = player->state;
+
+    // Apply movement before calculating position
+    if (player->state != GROUNDED) {
+        player->velocity.y += GRAVITY * dt;
+        PlayerMovement(player, dt, AIR_SPEED, MAX_SPEED);
     }
-    else if (IsKeyDown(KEY_LEFT))
-    {
-        player->velocity.x = fmaxf(player->velocity.x * dt - SPEED, -MAX_SPEED);
+    else {
+        PlayerMovement(player, dt, SPEED, MAX_SPEED);
     }
-    else
-    {
-        player->velocity.x = 0.0f;
-    }
-    // Calculate predicted positions
+
+    // Calculate predicted positions AFTER updating velocities
     float newX = player->shape.x + player->velocity.x * dt;
     float newY = player->shape.y + player->velocity.y * dt;
     bool collisionFound = false;
-
-    // Apply gravity consistently in non-grounded states
-    if (player->state != GROUNDED) {
-        player->velocity.y += GRAVITY * dt;
-    }
 
     // Check collision against each environment block
     for (int i = 0; i < environment->blockNum; i++)
@@ -204,13 +224,6 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
             break;
 
         case JUMPING:
-            // Apply air resistance to x velocity
-            player->velocity.x *= AIR_DRAG;
-
-            if (fabsf(player->velocity.x) < 0.1f) {
-                player->velocity.x = 0;
-            }
-
             // Transition to falling at peak of jump
             if (player->velocity.y > 0) {
                 player->state = FREE_FALLING;
@@ -218,13 +231,13 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
             break;
 
         case FREE_FALLING:
-            // Also apply air resistance while falling
-            player->velocity.x *= AIR_DRAG;
-            break;
-
         case HORIZONTAL_COLLISION:
         case VERTICAL_COLLISION:
-            // These states are handled during collision detection
             break;
+    }
+
+    // Update animation based on state change
+    if (previousState != player->state) {
+        // Animation state transition
     }
 }
