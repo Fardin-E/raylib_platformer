@@ -16,6 +16,7 @@ Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
         .camera = camera,
         .state = state,
         .animation_array = NULL,
+        .currentAnimation = ANIM_IDLE,
         .array_length = array_length,
     };
 
@@ -54,7 +55,7 @@ void DisposePlayer(Player *player)
 }
 
 SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, 
-    Rectangle rectangles[], int length)
+    Rectangle rectangles[], int length, AnimationType animeType)
 {
     SpriteAnimation spriteAnimation = 
     {
@@ -63,6 +64,7 @@ SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond,
         .timeStarted = GetTime(),
         .rectangles = NULL,
         .rectanglesLength = length,
+        .type = animeType,
     };
 
     Rectangle *mem = malloc(sizeof(Rectangle) * length);
@@ -94,24 +96,19 @@ void DisposeSpriteAnimation(SpriteAnimation *animation)
     }
 }
 
-void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint)
-{
+void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint) {
     if (player == NULL || player->animation_array == NULL)
         return;
 
-    for (int i = 0; i < player->array_length; i++)
-    {
-        const SpriteAnimation *anime = &player->animation_array[i];
+    const SpriteAnimation *anime = &player->animation_array[player->currentAnimation];
 
-        // Safety checks
-        if (anime->rectangles == NULL || anime->rectanglesLength == 0)
-            continue;
+    if (anime->rectangles == NULL || anime->rectanglesLength == 0)
+        return;
 
-        int index = (int)((GetTime() - anime->timeStarted) * anime->framesPerSecond) % anime->rectanglesLength;
-        Rectangle source = anime->rectangles[index];
+    int index = (int)((GetTime() - anime->timeStarted) * anime->framesPerSecond) % anime->rectanglesLength;
+    Rectangle source = anime->rectangles[index];
 
-        DrawTexturePro(anime->atlas, source, player->shape, origin, rotation, tint);
-    }
+    DrawTexturePro(anime->atlas, source, player->shape, origin, rotation, tint);
 }
 
 void PlayerMovement(Player *player, float dt, float acceleration, float max_speed)
@@ -125,6 +122,7 @@ void PlayerMovement(Player *player, float dt, float acceleration, float max_spee
         // Apply acceleration with higher values for responsiveness
         player->velocity.x += acceleration * dt;
         if (player->velocity.x > max_speed) player->velocity.x = max_speed;
+        TraceLog(LOG_WARNING, "player velocity: %f and %f", player->velocity.x, player->shape.x);
     }
     else if (IsKeyDown(KEY_LEFT))
     {
@@ -138,7 +136,7 @@ void PlayerMovement(Player *player, float dt, float acceleration, float max_spee
         player->velocity.x *= frictionValue;
 
         // Stop completely if movement is very small
-        if (fabsf(player->velocity.x) < 5.0f) { // Higher threshold for stopping
+        if (fabsf(player->velocity.x) < 0.1f) { 
             player->velocity.x = 0.0f;
         }
     }
@@ -150,7 +148,7 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     // Store previous state for animation transitions
     PlayerState previousState = player->state;
 
-    // Apply movement before calculating position
+    // Apply gravity and movement
     if (player->state != GROUNDED) {
         player->velocity.y += GRAVITY * dt;
         PlayerMovement(player, dt, AIR_SPEED, MAX_SPEED);
@@ -159,12 +157,31 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
         PlayerMovement(player, dt, SPEED, MAX_SPEED);
     }
 
-    // Calculate predicted positions AFTER updating velocities
+    // Calculate predicted positions
     float newX = player->shape.x + player->velocity.x * dt;
     float newY = player->shape.y + player->velocity.y * dt;
-    bool collisionFound = false;
+    bool isOnGround = false;
 
-    // Check collision against each environment block
+    // Add a small buffer for ground detection (1-2 pixels)
+    float groundCheckBuffer = 2.0f;
+    
+    // Check for ground directly below the player with a small buffer
+    Rectangle groundCheckRect = {
+        player->shape.x,
+        player->shape.y + player->shape.height,
+        player->shape.width,
+        groundCheckBuffer
+    };
+
+    // First check if player is on ground
+    for (int i = 0; i < environment->blockNum; i++) {
+        if (CheckCollisionRecs(groundCheckRect, environment->blocks[i])) {
+            isOnGround = true;
+            break;
+        }
+    }
+
+    // Then handle collisions
     for (int i = 0; i < environment->blockNum; i++)
     {
         Rectangle block = environment->blocks[i];
@@ -181,31 +198,19 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
                 newX = block.x + block.width;
             }
             player->velocity.x = 0;
-            player->state = HORIZONTAL_COLLISION;
-            collisionFound = true;
         }
 
         // Check vertical collision
         if (CheckCollisionRecs(predictedPosY, block))
         {
-            if (player->velocity.y > 0) {
+            if (player->velocity.y > 0) {  // Falling down and hit something below
                 newY = block.y - player->shape.height;
-                player->state = GROUNDED;
+                isOnGround = true;
             }
-            else if (player->velocity.y < 0) {
+            else if (player->velocity.y < 0) {  // Moving up and hit something above
                 newY = block.y + block.height;
-                player->state = VERTICAL_COLLISION;
             }
             player->velocity.y = 0;
-            collisionFound = true;
-            break;
-        }
-    }
-
-    // Handle state transitions
-    if (!collisionFound) {
-        if (player->state == GROUNDED) {
-            player->state = FREE_FALLING;
         }
     }
 
@@ -213,31 +218,71 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     player->shape.x = newX;
     player->shape.y = newY;
 
-    // State-specific updates
-    switch (player->state)
-    {
-        case GROUNDED:
-            if (IsKeyDown(KEY_SPACE)) {
-                player->velocity.y = -JUMP_SPEED;
-                player->state = JUMPING;
-            }
-            break;
+    // --- State Transitions with debouncing ---
+    bool isMovingRight = IsKeyDown(KEY_RIGHT);
+    bool isMovingLeft = IsKeyDown(KEY_LEFT);
 
-        case JUMPING:
-            // Transition to falling at peak of jump
-            if (player->velocity.y > 0) {
-                player->state = FREE_FALLING;
-            }
-            break;
+    // Add a small delay counter to prevent rapid state changes
+    static int stateChangeDelay = 0;
+    const int STATE_CHANGE_THRESHOLD = 5; // Adjust as needed
 
-        case FREE_FALLING:
-        case HORIZONTAL_COLLISION:
-        case VERTICAL_COLLISION:
-            break;
+    // Keep consistent ground state with debouncing
+    if (isOnGround) {
+        // If we were in air but now on ground, add debounce delay
+        if (player->state == JUMPING || player->state == FREE_FALLING) {
+            stateChangeDelay = STATE_CHANGE_THRESHOLD;
+        }
+        
+        // Only change state if jump is pressed or we're moving
+        if (IsKeyDown(KEY_SPACE)) {
+            player->velocity.y = -JUMP_SPEED;
+            player->state = JUMPING;
+            stateChangeDelay = 0; // Reset delay on explicit actions
+        }
+        else if (isMovingRight && fabsf(player->velocity.x) > 0.1f) {
+            player->state = MOVING_RIGHT;
+            stateChangeDelay = 0; // Reset delay on explicit actions
+        }
+        else if (isMovingLeft && fabsf(player->velocity.x) > 0.1f) {
+            player->state = MOVING_LEFT;
+            stateChangeDelay = 0; // Reset delay on explicit actions
+        }
+        else {
+            player->state = GROUNDED;
+        }
+    }
+    else if (stateChangeDelay > 0) {
+        // Still consider on ground during debounce period
+        stateChangeDelay--;
+        // Don't change state during debounce
+    }
+    else {
+        // Player is definitely in the air
+        if (player->velocity.y < 0) {
+            player->state = JUMPING;
+        }
+        else {
+            player->state = FREE_FALLING;
+        }
     }
 
-    // Update animation based on state change
-    if (previousState != player->state) {
-        // Animation state transition
+    // Animation state handling
+    switch (player->state) {
+        case GROUNDED:
+            player->currentAnimation = ANIM_IDLE;
+            break;
+        case MOVING_RIGHT:
+            player->currentAnimation = ANIM_RUNR;
+            break;
+        case MOVING_LEFT:
+            player->currentAnimation = ANIM_RUNL;
+            break;
+        case JUMPING:
+        case FREE_FALLING:
+            player->currentAnimation = ANIM_JUMP;
+            break;
+        default:
+            player->currentAnimation = ANIM_IDLE; // Fallback
+            break;
     }
 }

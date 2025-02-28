@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-
 // physics constants
 #define MAX_SPEED 500.0f      
 #define SPEED 1200.0f        
@@ -20,14 +19,14 @@
 
 #define NEG_LOOK_AHEAD_FACTOR 0.02f
 
+
 typedef enum
 {
-    FREE_FALLING = 0,
-    VERTICAL_COLLISION,
-    HORIZONTAL_COLLISION,
-    JUMPING,
-    GROUNDED,
-} PlayerState;
+    ANIM_IDLE,
+    ANIM_RUNR,
+    ANIM_RUNL,
+    ANIM_JUMP,
+} AnimationType;
 
 typedef struct SpriteAnimation
 {
@@ -36,7 +35,17 @@ typedef struct SpriteAnimation
     float timeStarted;
     Rectangle *rectangles;
     int rectanglesLength;
+    AnimationType type;
 } SpriteAnimation;
+
+typedef enum
+{
+    FREE_FALLING = 0,
+    GROUNDED,
+    JUMPING,
+    MOVING_RIGHT,
+    MOVING_LEFT,
+} PlayerState;
 
 typedef struct Player
 {
@@ -45,12 +54,14 @@ typedef struct Player
     Camera2D camera;
     PlayerState state;
     SpriteAnimation *animation_array;
+    AnimationType currentAnimation;
     int array_length;
 } Player;
 
 
 // Animation function sig
-SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, Rectangle rectangles[], int length);
+SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, 
+    Rectangle rectangles[], int length, AnimationType animeType);
 void DisposeSpriteAnimation(SpriteAnimation *animation);
 
 // player function sig

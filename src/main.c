@@ -3,7 +3,12 @@
 #define MAX_BUILDINGS 2
 
 Texture2D _texture;
-SpriteAnimation _animation;
+SpriteAnimation _idle_animation;
+SpriteAnimation _runr_animation;
+SpriteAnimation _runl_animation;
+SpriteAnimation _jump_animation;
+
+
 Player *_player;       // pointer to a dynamically allocated Player
 Environment _environment;
 
@@ -35,7 +40,7 @@ void PlayerCamera(Camera2D *camera, Player *player, float dt, int screenWidth, i
     // Now clamp the camera target.
     // Adjust these values according to your level design.
     // For example, if your level starts at x=0, set minX accordingly.
-    float minX = player->shape.x;                   // allow camera to move fully to the left edge
+    float minX = player->shape.x;          // allow camera to move fully to the left edge
     float maxX = MAX_BUILDINGS * 800;      // level width
     float minY = screenHeight / 2 / camera->zoom;
     float maxY = 1000 - minY;
@@ -54,7 +59,7 @@ int main(void)
     SetTraceLogLevel(LOG_WARNING);
 
     // Player properties
-    Rectangle playerShape = { 200.0f, 200.0f, 40.0f, 40.0f };
+    Rectangle playerShape = { 200.0f, 200.0f, 25.0f, 40.0f };
     Vector2 velocity = { 0.0f, 0.0f };
     Vector2 origin = { 0.0f, 0.0f };
 
@@ -65,7 +70,6 @@ int main(void)
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
-
     // Environment blocks
     Rectangle floor = { 0.0f, 500.0f, 800.0f, 100.0f };
     Rectangle block1 = { 100.0f, 350.0f, 200.0f, 70.0f };
@@ -74,15 +78,30 @@ int main(void)
 
     // Load texture and create sprite animation
     _texture = LoadTexture("assets/mario_spritesheet.png");
-    _animation = CreateSpriteAnimation(_texture, 1, (Rectangle[]) {
-        (Rectangle){ 36, 1, 34, 26 },
-    }, 1);
+
+    Rectangle idle[] = { (Rectangle) { 47, 10, 12, 15 } };
+    _idle_animation = CreateSpriteAnimation(_texture, 1, idle, 1, ANIM_IDLE);
+
+
+    Rectangle runr[] = { (Rectangle){ 80, 9, 15, 16 }, 
+                        (Rectangle){ 117, 10, 12, 15 },
+                        (Rectangle){ 150, 9, 15, 16 }, };
+    _runr_animation = CreateSpriteAnimation(_texture, 9, runr, 3, ANIM_RUNR);
+
+    Rectangle runl[] = { (Rectangle){ 80, 9, -15, 16 }, 
+                        (Rectangle){ 117, 10, -12, 15 },
+                        (Rectangle){ 150, 9, -15, 16 }, };
+    _runl_animation = CreateSpriteAnimation(_texture, 9, runl, 3, ANIM_RUNL);
+
+
+    Rectangle jump[] = { (Rectangle){ 395, 9, 15, 16 } };
+    _jump_animation = CreateSpriteAnimation(_texture, 1, jump, 1, ANIM_JUMP);
 
     // Build the animation array for the player (even if just one element)
-    SpriteAnimation playerAnimations[1] = { _animation };
+    SpriteAnimation playerAnimations[] = { _idle_animation, _runr_animation, _runl_animation, _jump_animation };
 
     // Create the player dynamically
-    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, playerAnimations, 1);
+    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, playerAnimations, 4);
     if (_player == NULL)
     {
         TraceLog(LOG_ERROR, "Failed to create player!");
