@@ -16,6 +16,7 @@ Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
         .camera = camera,
         .state = state,
         .direction = direction,
+        .previousDirection = direction,
         .animation_array = NULL,
         .currentAnimation = ANIM_IDLE,
         .array_length = array_length,
@@ -97,6 +98,7 @@ void DisposeSpriteAnimation(SpriteAnimation *animation)
     }
 }
 
+
 void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint) {
     if (player == NULL || player->animation_array == NULL)
         return;
@@ -109,8 +111,19 @@ void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color 
     int index = (int)((GetTime() - anime->timeStarted) * anime->framesPerSecond) % anime->rectanglesLength;
     Rectangle source = anime->rectangles[index];
 
+    // Flip the sprite horizontally by negating the width if direction is LEFT
+    if (player->direction == LEFT) {
+        source.width = -fabsf(source.width);
+    }
+    else {
+        source.width = fabsf(source.width);
+    }
+
+
+
     DrawTexturePro(anime->atlas, source, player->shape, origin, rotation, tint);
 }
+
 
 void PlayerMovement(Player *player, float dt, float acceleration, float max_speed)
 {
@@ -143,7 +156,6 @@ void PlayerMovement(Player *player, float dt, float acceleration, float max_spee
         }
     }
 }
-
 
 void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt)
 {
@@ -217,6 +229,16 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     player->shape.x = newX;
     player->shape.y = newY;
 
+    if (player->direction != player->previousDirection)
+    {
+        for (int i = 0; i < player->array_length; i++) {
+            if (player->animation_array[i].type == player->currentAnimation) {
+                player->animation_array[i].timeStarted = GetTime();
+                break;
+            }
+        }
+    }
+
 
     // Add a small delay counter to prevent rapid state changes
     static int stateChangeDelay = 0;
@@ -268,23 +290,14 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     if (player->state == GROUNDED) {
         player->currentAnimation = ANIM_IDLE;
     }
-    else if (player->state == MOVING && player->direction == RIGHT) {
-        player->currentAnimation = ANIM_RUNR;
+    else if (player->state == MOVING) {
+        player->currentAnimation = ANIM_RUN;
     }
-    else if (player->state == MOVING && player->direction == LEFT) {
-        player->currentAnimation = ANIM_RUNL;
+    else if (player->state == JUMPING) {
+        player->currentAnimation = ANIM_JUMP;
     }
-    else if (player->state == JUMPING && player->direction == RIGHT) {
-        player->currentAnimation = ANIM_JUMPR;
-    }
-    else if (player->state == JUMPING && player->direction == LEFT) {
-        player->currentAnimation = ANIM_JUMPL;
-    }
-    else if (player->state == FREE_FALLING && player->direction == LEFT) {
-        player->currentAnimation = ANIM_JUMPL;
-    }
-    else if (player->state == FREE_FALLING && player->direction == RIGHT) {
-        player->currentAnimation = ANIM_JUMPR;
+    else if (player->state == FREE_FALLING) {
+        player->currentAnimation = ANIM_JUMP;
     }
     else {
         player->currentAnimation = ANIM_IDLE; // Fallback

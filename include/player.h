@@ -23,10 +23,8 @@
 typedef enum
 {
     ANIM_IDLE,
-    ANIM_RUNR,
-    ANIM_RUNL,
-    ANIM_JUMPR,
-    ANIM_JUMPL,
+    ANIM_RUN,
+    ANIM_JUMP,
 } AnimationType;
 
 typedef struct SpriteAnimation
@@ -60,6 +58,7 @@ typedef struct Player
     Camera2D camera;
     PlayerState state;
     PlayerDirection direction;
+    PlayerDirection previousDirection;
     SpriteAnimation *animation_array;
     AnimationType currentAnimation;
     int array_length;

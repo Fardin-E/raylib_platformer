@@ -4,10 +4,8 @@
 
 Texture2D _texture;
 SpriteAnimation _idle_animation;
-SpriteAnimation _runr_animation;
-SpriteAnimation _runl_animation;
-SpriteAnimation _jumpl_animation;
-SpriteAnimation _jumpr_animation;
+SpriteAnimation _run_animation;
+SpriteAnimation _jump_animation;
 
 
 Player *_player;       // pointer to a dynamically allocated Player
@@ -84,29 +82,21 @@ int main(void)
     _idle_animation = CreateSpriteAnimation(_texture, 1, idle, 1, ANIM_IDLE);
 
 
-    Rectangle runr[] = { (Rectangle){ 80, 9, 15, 16 }, 
+    Rectangle run[] = { (Rectangle){ 80, 9, 15, 16 }, 
                         (Rectangle){ 117, 10, 12, 15 },
                         (Rectangle){ 150, 9, 15, 16 }, };
-    _runr_animation = CreateSpriteAnimation(_texture, 9, runr, 3, ANIM_RUNR);
-
-    Rectangle runl[] = { (Rectangle){ 80, 9, -15, 16 }, 
-                        (Rectangle){ 117, 10, -12, 15 },
-                        (Rectangle){ 150, 9, -15, 16 }, };
-    _runl_animation = CreateSpriteAnimation(_texture, 9, runl, 3, ANIM_RUNL);
+    _run_animation = CreateSpriteAnimation(_texture, 9, run, 3, ANIM_RUN);
 
 
-    Rectangle jumpr[] = { (Rectangle){ 395, 9, 15, 16 } };
-    _jumpr_animation = CreateSpriteAnimation(_texture, 1, jumpr, 1, ANIM_JUMPR);
+    Rectangle jump[] = { (Rectangle){ 395, 9, 15, 16 } };
+    _jump_animation = CreateSpriteAnimation(_texture, 1, jump, 1, ANIM_JUMP);
 
-    Rectangle jumpl[] = { (Rectangle) { 395, 9, -15, 16 } };
-    _jumpl_animation = CreateSpriteAnimation(_texture, 1, jumpl, 1, ANIM_JUMPL);
 
     // Build the animation array for the player (even if just one element)
-    SpriteAnimation playerAnimations[] = { _idle_animation, _runr_animation, 
-        _runl_animation, _jumpr_animation, _jumpl_animation };
+    SpriteAnimation playerAnimations[] = { _idle_animation, _run_animation, _jump_animation };
 
     // Create the player dynamically
-    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, RIGHT, playerAnimations, 5);
+    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, RIGHT, playerAnimations, 3);
     if (_player == NULL)
     {
         TraceLog(LOG_ERROR, "Failed to create player!");
