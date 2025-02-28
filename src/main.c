@@ -106,7 +106,7 @@ int main(void)
         _runl_animation, _jumpr_animation, _jumpl_animation };
 
     // Create the player dynamically
-    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLINGR, playerAnimations, 5);
+    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, RIGHT, playerAnimations, 5);
     if (_player == NULL)
     {
         TraceLog(LOG_ERROR, "Failed to create player!");

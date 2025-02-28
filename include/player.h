@@ -41,13 +41,16 @@ typedef struct SpriteAnimation
 
 typedef enum
 {
+    RIGHT,
+    LEFT,
+} PlayerDirection;
+
+typedef enum
+{
     GROUNDED = 0,
-    FREE_FALLINGL,
-    FREE_FALLINGR,
-    JUMPING_RIGHT,
-    JUMPING_LEFT,
-    MOVING_RIGHT,
-    MOVING_LEFT,
+    FREE_FALLING,
+    JUMPING,
+    MOVING,
 } PlayerState;
 
 typedef struct Player
@@ -56,6 +59,7 @@ typedef struct Player
     Vector2 velocity;
     Camera2D camera;
     PlayerState state;
+    PlayerDirection direction;
     SpriteAnimation *animation_array;
     AnimationType currentAnimation;
     int array_length;
@@ -69,7 +73,7 @@ void DisposeSpriteAnimation(SpriteAnimation *animation);
 
 // player function sig
 Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
-    PlayerState state, SpriteAnimation animation_array[], int array_length);
+    PlayerState state, PlayerDirection direction, SpriteAnimation animation_array[], int array_length);
 void DisposePlayer(Player *player);
 void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint);
 void PlayerMovement(Player *player, float dt, float speed, float max_speed);

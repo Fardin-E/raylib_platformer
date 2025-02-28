@@ -1,7 +1,7 @@
 #include "player.h"
 
 Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
-    PlayerState state, SpriteAnimation animation_array[], int array_length)
+    PlayerState state, PlayerDirection direction, SpriteAnimation animation_array[], int array_length)
 {
     Player *player = malloc(sizeof(Player));
     if (!player)
@@ -15,6 +15,7 @@ Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
         .velocity = velocity,
         .camera = camera,
         .state = state,
+        .direction = direction,
         .animation_array = NULL,
         .currentAnimation = ANIM_IDLE,
         .array_length = array_length,
@@ -114,8 +115,7 @@ void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color 
 void PlayerMovement(Player *player, float dt, float acceleration, float max_speed)
 {
     // Calculate whether we're using ground or air movement
-    bool isInAir = (player->state == JUMPING_RIGHT || 
-        player->state == JUMPING_LEFT || player->state == FREE_FALLINGL || player->state == FREE_FALLINGR);
+    bool isInAir = (player->state == JUMPING || player->state == FREE_FALLING);
     float frictionValue = isInAir ? AIR_DRAG : GROUND_FRICTION;
 
     if (IsKeyDown(KEY_RIGHT))
@@ -217,9 +217,6 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     player->shape.x = newX;
     player->shape.y = newY;
 
-    // --- State Transitions with debouncing ---
-    bool isMovingRight = IsKeyDown(KEY_RIGHT);
-    bool isMovingLeft = IsKeyDown(KEY_LEFT);
 
     // Add a small delay counter to prevent rapid state changes
     static int stateChangeDelay = 0;
@@ -228,24 +225,24 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     // Keep consistent ground state with debouncing
     if (isOnGround) {
         // If we were in air but now on ground, add debounce delay
-        if (player->state == JUMPING_RIGHT || player->state == JUMPING_LEFT
-            || player->state == FREE_FALLINGL || player->state == FREE_FALLINGR) {
+        if (player->state == JUMPING || player->state == FREE_FALLING) {
             stateChangeDelay = STATE_CHANGE_THRESHOLD;
         }
         
         // Only change state if jump is pressed or we're moving
         if (IsKeyDown(KEY_SPACE)) {
             player->velocity.y = -JUMP_SPEED;
-            if (player->velocity.x > 0) player->state = JUMPING_RIGHT;
-            if (player->velocity.x < 0) player->state = JUMPING_LEFT;
+            player->state = JUMPING;
             stateChangeDelay = 0; // Reset delay on explicit actions
         }
-        else if (isMovingRight && fabsf(player->velocity.x) > 0.1f) {
-            player->state = MOVING_RIGHT;
+        else if (IsKeyDown(KEY_RIGHT) && fabsf(player->velocity.x) > 0.1f) {
+            player->state = MOVING;
+            player->direction = RIGHT;
             stateChangeDelay = 0; // Reset delay on explicit actions
         }
-        else if (isMovingLeft && fabsf(player->velocity.x) > 0.1f) {
-            player->state = MOVING_LEFT;
+        else if (IsKeyDown(KEY_LEFT) && fabsf(player->velocity.x) > 0.1f) {
+            player->state = MOVING;
+            player->direction = LEFT;
             stateChangeDelay = 0; // Reset delay on explicit actions
         }
         else {
@@ -259,47 +256,38 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     }
     else {
         // Player is definitely in the air
-        if (player->velocity.y < 0 && player->velocity.x > 0) {
-            player->state = JUMPING_RIGHT;
+        if (player->velocity.y < 0) {
+            player->state = JUMPING;
         }
-        else if (player->velocity.y < 0 && player->velocity.x < 0) {
-            player->state = JUMPING_LEFT;
-        }
-        else if (player->velocity.x < 0)
+        else
         {
-            player->state = FREE_FALLINGL;
-        }
-        else if (player->velocity.x > 0)
-        {
-            player->state = FREE_FALLINGR;
+            player->state = FREE_FALLING;
         }
     }
 
-    // Animation state handling
-    switch (player->state) {
-        case GROUNDED:
-            player->currentAnimation = ANIM_IDLE;
-            break;
-        case MOVING_RIGHT:
-            player->currentAnimation = ANIM_RUNR;
-            break;
-        case MOVING_LEFT:
-            player->currentAnimation = ANIM_RUNL;
-            break;
-        case JUMPING_RIGHT:
-            player->currentAnimation = ANIM_JUMPR;
-            break;
-        case JUMPING_LEFT:
-            player->currentAnimation = ANIM_JUMPL;
-            break;
-        case FREE_FALLINGL:
-            player->currentAnimation = ANIM_JUMPL;
-            break;
-        case FREE_FALLINGR:
-            player->currentAnimation = ANIM_JUMPR;
-            break;
-        default:
-            player->currentAnimation = ANIM_IDLE; // Fallback
-            break;
+    if (player->state == GROUNDED) {
+        player->currentAnimation = ANIM_IDLE;
     }
+    else if (player->state == MOVING && player->direction == RIGHT) {
+        player->currentAnimation = ANIM_RUNR;
+    }
+    else if (player->state == MOVING && player->direction == LEFT) {
+        player->currentAnimation = ANIM_RUNL;
+    }
+    else if (player->state == JUMPING && player->direction == RIGHT) {
+        player->currentAnimation = ANIM_JUMPR;
+    }
+    else if (player->state == JUMPING && player->direction == LEFT) {
+        player->currentAnimation = ANIM_JUMPL;
+    }
+    else if (player->state == FREE_FALLING && player->direction == LEFT) {
+        player->currentAnimation = ANIM_JUMPL;
+    }
+    else if (player->state == FREE_FALLING && player->direction == RIGHT) {
+        player->currentAnimation = ANIM_JUMPR;
+    }
+    else {
+        player->currentAnimation = ANIM_IDLE; // Fallback
+    }
+
 }
