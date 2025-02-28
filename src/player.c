@@ -114,7 +114,8 @@ void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color 
 void PlayerMovement(Player *player, float dt, float acceleration, float max_speed)
 {
     // Calculate whether we're using ground or air movement
-    bool isInAir = (player->state == JUMPING || player->state == FREE_FALLING);
+    bool isInAir = (player->state == JUMPING_RIGHT || 
+        player->state == JUMPING_LEFT || player->state == FREE_FALLINGL || player->state == FREE_FALLINGR);
     float frictionValue = isInAir ? AIR_DRAG : GROUND_FRICTION;
 
     if (IsKeyDown(KEY_RIGHT))
@@ -129,6 +130,7 @@ void PlayerMovement(Player *player, float dt, float acceleration, float max_spee
         // Apply acceleration with higher values for responsiveness
         player->velocity.x -= acceleration * dt;
         if (player->velocity.x < -max_speed) player->velocity.x = -max_speed;
+        TraceLog(LOG_WARNING, "player velocity: %f and %f", player->velocity.x, player->shape.x);
     }
     else
     {
@@ -145,9 +147,6 @@ void PlayerMovement(Player *player, float dt, float acceleration, float max_spee
 
 void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt)
 {
-    // Store previous state for animation transitions
-    PlayerState previousState = player->state;
-
     // Apply gravity and movement
     if (player->state != GROUNDED) {
         player->velocity.y += GRAVITY * dt;
@@ -229,14 +228,16 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     // Keep consistent ground state with debouncing
     if (isOnGround) {
         // If we were in air but now on ground, add debounce delay
-        if (player->state == JUMPING || player->state == FREE_FALLING) {
+        if (player->state == JUMPING_RIGHT || player->state == JUMPING_LEFT
+            || player->state == FREE_FALLINGL || player->state == FREE_FALLINGR) {
             stateChangeDelay = STATE_CHANGE_THRESHOLD;
         }
         
         // Only change state if jump is pressed or we're moving
         if (IsKeyDown(KEY_SPACE)) {
             player->velocity.y = -JUMP_SPEED;
-            player->state = JUMPING;
+            if (player->velocity.x > 0) player->state = JUMPING_RIGHT;
+            if (player->velocity.x < 0) player->state = JUMPING_LEFT;
             stateChangeDelay = 0; // Reset delay on explicit actions
         }
         else if (isMovingRight && fabsf(player->velocity.x) > 0.1f) {
@@ -258,11 +259,19 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     }
     else {
         // Player is definitely in the air
-        if (player->velocity.y < 0) {
-            player->state = JUMPING;
+        if (player->velocity.y < 0 && player->velocity.x > 0) {
+            player->state = JUMPING_RIGHT;
         }
-        else {
-            player->state = FREE_FALLING;
+        else if (player->velocity.y < 0 && player->velocity.x < 0) {
+            player->state = JUMPING_LEFT;
+        }
+        else if (player->velocity.x < 0)
+        {
+            player->state = FREE_FALLINGL;
+        }
+        else if (player->velocity.x > 0)
+        {
+            player->state = FREE_FALLINGR;
         }
     }
 
@@ -277,9 +286,17 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
         case MOVING_LEFT:
             player->currentAnimation = ANIM_RUNL;
             break;
-        case JUMPING:
-        case FREE_FALLING:
-            player->currentAnimation = ANIM_JUMP;
+        case JUMPING_RIGHT:
+            player->currentAnimation = ANIM_JUMPR;
+            break;
+        case JUMPING_LEFT:
+            player->currentAnimation = ANIM_JUMPL;
+            break;
+        case FREE_FALLINGL:
+            player->currentAnimation = ANIM_JUMPL;
+            break;
+        case FREE_FALLINGR:
+            player->currentAnimation = ANIM_JUMPR;
             break;
         default:
             player->currentAnimation = ANIM_IDLE; // Fallback

@@ -25,7 +25,8 @@ typedef enum
     ANIM_IDLE,
     ANIM_RUNR,
     ANIM_RUNL,
-    ANIM_JUMP,
+    ANIM_JUMPR,
+    ANIM_JUMPL,
 } AnimationType;
 
 typedef struct SpriteAnimation
@@ -40,9 +41,11 @@ typedef struct SpriteAnimation
 
 typedef enum
 {
-    FREE_FALLING = 0,
-    GROUNDED,
-    JUMPING,
+    GROUNDED = 0,
+    FREE_FALLINGL,
+    FREE_FALLINGR,
+    JUMPING_RIGHT,
+    JUMPING_LEFT,
     MOVING_RIGHT,
     MOVING_LEFT,
 } PlayerState;

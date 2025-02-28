@@ -6,7 +6,8 @@ Texture2D _texture;
 SpriteAnimation _idle_animation;
 SpriteAnimation _runr_animation;
 SpriteAnimation _runl_animation;
-SpriteAnimation _jump_animation;
+SpriteAnimation _jumpl_animation;
+SpriteAnimation _jumpr_animation;
 
 
 Player *_player;       // pointer to a dynamically allocated Player
@@ -94,14 +95,18 @@ int main(void)
     _runl_animation = CreateSpriteAnimation(_texture, 9, runl, 3, ANIM_RUNL);
 
 
-    Rectangle jump[] = { (Rectangle){ 395, 9, 15, 16 } };
-    _jump_animation = CreateSpriteAnimation(_texture, 1, jump, 1, ANIM_JUMP);
+    Rectangle jumpr[] = { (Rectangle){ 395, 9, 15, 16 } };
+    _jumpr_animation = CreateSpriteAnimation(_texture, 1, jumpr, 1, ANIM_JUMPR);
+
+    Rectangle jumpl[] = { (Rectangle) { 395, 9, -15, 16 } };
+    _jumpl_animation = CreateSpriteAnimation(_texture, 1, jumpl, 1, ANIM_JUMPL);
 
     // Build the animation array for the player (even if just one element)
-    SpriteAnimation playerAnimations[] = { _idle_animation, _runr_animation, _runl_animation, _jump_animation };
+    SpriteAnimation playerAnimations[] = { _idle_animation, _runr_animation, 
+        _runl_animation, _jumpr_animation, _jumpl_animation };
 
     // Create the player dynamically
-    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLING, playerAnimations, 4);
+    _player = CreatePlayer(playerShape, velocity, camera, FREE_FALLINGR, playerAnimations, 5);
     if (_player == NULL)
     {
         TraceLog(LOG_ERROR, "Failed to create player!");
