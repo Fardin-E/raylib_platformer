@@ -1,79 +1,80 @@
 #pragma once
 
 #include "environment.h"
-#include <math.h>
+#include <cmath>
 #include "raylib.h"
-#include <stdlib.h>
-#include <stdbool.h>
+#include <vector>
+#include <algorithm>
 
-// physics constants
-#define MAX_SPEED 500.0f      
-#define SPEED 1200.0f        
-#define AIR_SPEED 600.0f      
-#define GRAVITY 800.0f        
-#define JUMP_SPEED 400.0f     
-#define AIR_DRAG 0.98f        
-#define GROUND_FRICTION 0.85f 
+// Physics Constants
+constexpr float MAX_SPEED = 500.0f;
+constexpr float SPEED = 1200.0f;
+constexpr float AIR_SPEED = 600.0f;
+constexpr float GRAVITY = 800.0f;
+constexpr float JUMP_SPEED = 400.0f;
+constexpr float AIR_DRAG = 0.98f;
+constexpr float GROUND_FRICTION = 0.85f;
 
-#define POS_LOOK_AHEAD_FACTOR 0.02f
+constexpr float POS_LOOK_AHEAD_FACTOR = 0.02f;
 
-#define NEG_LOOK_AHEAD_FACTOR 0.02f
+constexpr float NEG_LOOK_AHEAD_FACTOR = 0.02f;
 
-
-typedef enum
+// Animation Types
+enum class AnimationType
 {
     ANIM_IDLE,
     ANIM_RUN,
-    ANIM_JUMP,
-} AnimationType;
+    ANIM_JUMP
+};
 
-typedef struct SpriteAnimation
-{
-    Texture2D atlas;
-    int framesPerSecond;
-    float timeStarted;
-    Rectangle *rectangles;
-    int rectanglesLength;
-    AnimationType type;
-} SpriteAnimation;
-
-typedef enum
+// Player Direction
+enum class PlayerDirection
 {
     RIGHT,
-    LEFT,
-} PlayerDirection;
+    LEFT
+};
 
-typedef enum
+// Player State
+enum class PlayerState
 {
-    GROUNDED = 0,
+    GROUNDED,
     FREE_FALLING,
     JUMPING,
-    MOVING,
-} PlayerState;
+    MOVING
+};
 
-typedef struct Player
+// Sprite Animation Class
+class SpriteAnimation
 {
+    public:
+    Texture2D *atlas;
+    int framesPerSecond;
+    float timeStarted;
+    std::vector<Rectangle> rectangles;
+    AnimationType type;
+
+    SpriteAnimation(Texture2D *atlas, int fps, std::vector<Rectangle> rects, AnimationType type);
+
+    Rectangle GetCurrentFrame() const;
+};
+
+// Player Class
+class Player
+{
+    public:
     Rectangle shape;
     Vector2 velocity;
     Camera2D camera;
     PlayerState state;
     PlayerDirection direction;
     PlayerDirection previousDirection;
-    SpriteAnimation *animation_array;
+    std::vector<SpriteAnimation> animationArray;
     AnimationType currentAnimation;
-    int array_length;
-} Player;
 
+    Player(Rectangle shape, Vector2 velocity, Camera2D camera, PlayerState state, PlayerDirection direction,
+        std::vector<SpriteAnimation> animations);
 
-// Animation function sig
-SpriteAnimation CreateSpriteAnimation(Texture2D atlas, int framesPerSecond, 
-    Rectangle rectangles[], int length, AnimationType animeType);
-void DisposeSpriteAnimation(SpriteAnimation *animation);
-
-// player function sig
-Player *CreatePlayer(Rectangle shape, Vector2 velocity, Camera2D camera,
-    PlayerState state, PlayerDirection direction, SpriteAnimation animation_array[], int array_length);
-void DisposePlayer(Player *player);
-void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color tint);
-void PlayerMovement(Player *player, float dt, float speed, float max_speed);
-void UpdatePlayerCollisionAndState(Player *player, Environment *environment, float dt);
+    void Draw(float rotation, float dt, Vector2 origin, Color tint) const;
+    void Move(float dt, float acceleration, float max_speed);
+    void UpdateCollisionAndState(Environment *environment, float dt);
+};

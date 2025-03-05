@@ -17,7 +17,7 @@ project(raylib_platformer)
 add_subdirectory(thirdparty/raylib)
 
 # Find all source files in the src directory
-file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 # Add the executable target with all found source files
 add_executable(${CMAKE_PROJECT_NAME} ${MY_SOURCES})

@@ -1,9 +1,7 @@
 #pragma once
 
-
-#include <stdio.h>
-#include <time.h>
+#include <iostream>     // C++ version of stdio.h
+#include <ctime>        // C++ version of time.h
 #include "player.h"
-#include "raymath.h"
 #include "environment.h"
-
+#include "raymath.h"

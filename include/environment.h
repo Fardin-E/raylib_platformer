@@ -1,17 +1,15 @@
 #pragma once
 
 #include "raylib.h"
-#include <stdlib.h>
+#include <vector>
+#include <iostream>
 
-typedef struct Environment
-{
-    Rectangle *blocks;
-    int blockNum;
-} Environment;
+class Environment {
+    public:
+    std::vector<Rectangle> blocks;
 
+    Environment(const std::vector<Rectangle> &blockList);
 
-Environment CreateEnvironment(Rectangle blocks[], int blockNum);
-
-void Init_and_draw_floor(Environment *environment, Color tint);
-
-void drawBlock(Environment *environment, Vector2 origin, float rotation, Color tint);
+    void InitAndDrawFloor(Color tint) const;
+    void DrawBlocks(Vector2 origin, float rotation, Color tint) const;
+};
