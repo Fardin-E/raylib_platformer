@@ -119,11 +119,8 @@ void DrawPlayer(Player *player, float rotation, float dt, Vector2 origin, Color 
         source.width = fabsf(source.width);
     }
 
-
-
     DrawTexturePro(anime->atlas, source, player->shape, origin, rotation, tint);
 }
-
 
 void PlayerMovement(Player *player, float dt, float acceleration, float max_speed)
 {
@@ -136,6 +133,7 @@ void PlayerMovement(Player *player, float dt, float acceleration, float max_spee
         // Apply acceleration with higher values for responsiveness
         player->velocity.x += acceleration * dt;
         if (player->velocity.x > max_speed) player->velocity.x = max_speed;
+        player->direction = RIGHT;
         TraceLog(LOG_WARNING, "player velocity: %f and %f", player->velocity.x, player->shape.x);
     }
     else if (IsKeyDown(KEY_LEFT))
@@ -143,6 +141,7 @@ void PlayerMovement(Player *player, float dt, float acceleration, float max_spee
         // Apply acceleration with higher values for responsiveness
         player->velocity.x -= acceleration * dt;
         if (player->velocity.x < -max_speed) player->velocity.x = -max_speed;
+        player->direction = LEFT;
         TraceLog(LOG_WARNING, "player velocity: %f and %f", player->velocity.x, player->shape.x);
     }
     else
@@ -229,7 +228,10 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
     player->shape.x = newX;
     player->shape.y = newY;
 
-    if (player->direction != player->previousDirection)
+
+    // WARNING: this was causing the animation to bug after flipping
+
+    /*if (player->direction != player->previousDirection)
     {
         for (int i = 0; i < player->array_length; i++) {
             if (player->animation_array[i].type == player->currentAnimation) {
@@ -237,7 +239,7 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
                 break;
             }
         }
-    }
+    }*/
 
 
     // Add a small delay counter to prevent rapid state changes
@@ -259,12 +261,10 @@ void UpdatePlayerCollisionAndState(Player *player, Environment *environment, flo
         }
         else if (IsKeyDown(KEY_RIGHT) && fabsf(player->velocity.x) > 0.1f) {
             player->state = MOVING;
-            player->direction = RIGHT;
             stateChangeDelay = 0; // Reset delay on explicit actions
         }
         else if (IsKeyDown(KEY_LEFT) && fabsf(player->velocity.x) > 0.1f) {
             player->state = MOVING;
-            player->direction = LEFT;
             stateChangeDelay = 0; // Reset delay on explicit actions
         }
         else {
